@@ -3,5 +3,4 @@
 // Le bouton « Copier ma réservation » du site fournit la ligne toute prête.
 // Fichier généré par admin.html : on peut aussi le modifier à la main.
 var TAKEN = {
-  "RDC-G-B.8": "Ordel",
 };
