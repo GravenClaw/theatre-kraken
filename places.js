@@ -1,7 +1,7 @@
 // Places déjà réservées sur le site du Grand Théâtre du Kraken.
 // Une ligne par place : "identifiant de la place": "pseudo",
 // Le bouton « Copier ma réservation » du site fournit la ligne toute prête.
-// Exemple (à retirer des commentaires pour l'utiliser) :
-//   "E2-C.3": "Pseudo",
+// Fichier généré par admin.html : on peut aussi le modifier à la main.
 var TAKEN = {
+  "RDC-G-B.8": "Ordel",
 };
