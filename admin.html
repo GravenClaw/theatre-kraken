@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Réservations, gestion | Le Grand Théâtre du Kraken</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,500&family=Pirata+One&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#140a0c;--panel:#1f1013;--velvet:#8a1624;--gold:#d4a24c;--ivory:#f4e8d0;--mute:#b9a48a;--line:#4a2a2e;--sel:#ff5a4d;--ok:#8fcf9a;
+color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ivory);font:20px/1.55 "Cormorant Garamond",Georgia,serif}
+h1,h2{font-family:"Pirata One","Cormorant Garamond",Georgia,serif;font-weight:400;letter-spacing:.02em;margin:0}
+h1{font-size:2.8rem;color:var(--gold);line-height:1.1}
+h2{font-size:1.9rem;color:var(--gold)}
+main{max-width:780px;margin:0 auto;padding:1.5rem 1.2rem 4rem}
+a{color:var(--gold)}
+a:focus-visible,button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid var(--sel);outline-offset:2px}
+.back{display:inline-block;margin-bottom:1rem;color:var(--mute);text-decoration:none}
+.back:hover{color:var(--gold)}
+.lead{max-width:60ch;color:var(--mute);margin:.6rem 0 0}
+section{margin-top:2.4rem;padding-top:1.4rem;border-top:1px solid var(--line)}
+form{display:grid;gap:.9rem;margin-top:1rem}
+label{display:grid;gap:.25rem;color:var(--mute)}
+input,textarea{font:inherit;padding:.55rem .7rem;border-radius:6px;border:1px solid #6a4a4e;background:#0e0708;color:var(--ivory);width:100%}
+textarea{resize:vertical;min-height:5.2rem}
+textarea.code{font:15px/1.45 ui-monospace,Menlo,Consolas,monospace;min-height:14rem}
+.btn{display:inline-block;background:var(--velvet);color:var(--ivory);border:2px solid var(--gold);padding:.55rem 1.4rem;border-radius:6px;font:700 1.1rem "Cormorant Garamond",Georgia,serif;cursor:pointer}
+.btn:hover{background:#a61c2d}
+.btn.alt{background:transparent;color:var(--gold)}
+.btn.alt:hover{background:#2a1418}
+.row{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.8rem}
+.msg{min-height:1.6em;margin:.2rem 0 0}
+.msg.ok{color:var(--ok)}.msg.err{color:var(--sel)}
+.hint{color:var(--mute);font-size:1rem;margin:0}
+.draft{display:none;align-items:center;gap:.8rem;flex-wrap:wrap;margin-top:1rem;padding:.7rem .9rem;border:1px solid var(--gold);border-radius:8px;background:var(--panel)}
+.draft.on{display:flex}
+.draft p{margin:0;flex:1 1 18rem}
+table{width:100%;border-collapse:collapse;margin-top:1rem}
+th,td{text-align:left;padding:.55rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:600;font-size:1rem}
+td.id{color:var(--mute);font-size:.95rem}
+td.who{font-weight:700}
+td.act{text-align:right;white-space:nowrap}
+.rm{background:none;border:1px solid #6a4a4e;color:var(--mute);border-radius:6px;padding:.25rem .7rem;font:inherit;font-size:1rem;cursor:pointer}
+.rm:hover{border-color:var(--sel);color:var(--sel)}
+.empty{color:var(--mute);font-style:italic;margin-top:1rem}
+.wrap{overflow-x:auto}
+@media (max-width:560px){h1{font-size:2.2rem}th.hd,td.id{display:none}}
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="index.html#reserver">← Retour au site</a>
+<h1>Gérer les places réservées</h1>
+<p class="lead">Collez la réservation reçue (bouton « Copier ma réservation » du site) ou saisissez la place et le pseudo. Puis copiez le nouveau <b>places.js</b> et publiez-le.</p>
+
+<div class="draft" id="draft"><p>Vous avez des modifications qui ne sont pas encore dans <b>places.js</b> (brouillon restauré).</p><button class="btn alt" type="button" id="reset">Repartir de places.js</button></div>
+
+<section aria-labelledby="h-add">
+<h2 id="h-add">Ajouter une réservation</h2>
+<form id="form" autocomplete="off">
+<label>Réservation
+<textarea id="resa" placeholder="Collez ici le texte copié, ou tapez l’identifiant de la place (ex. E2-C.3)" spellcheck="false"></textarea></label>
+<p class="hint" id="hint"></p>
+<label>Pseudo
+<input id="pseudo" maxlength="32" placeholder="Pseudo Minecraft"></label>
+<div><button class="btn" type="submit">Ajouter la réservation</button></div>
+<p class="msg" id="msg" role="status" aria-live="polite"></p>
+</form>
+</section>
+
+<section aria-labelledby="h-list">
+<h2 id="h-list">Places réservées (<span id="count">0</span>)</h2>
+<div class="wrap" id="listwrap"></div>
+</section>
+
+<section aria-labelledby="h-out">
+<h2 id="h-out">Nouveau places.js</h2>
+<p class="hint">Sur GitHub : ouvrez <b>places.js</b>, cliquez sur le crayon, remplacez tout le contenu par ce texte, puis « Commit changes ».</p>
+<textarea class="code" id="out" readonly spellcheck="false" aria-label="Contenu de places.js"></textarea>
+<div class="row"><button class="btn" type="button" id="copy">Copier places.js</button><button class="btn alt" type="button" id="dl">Télécharger places.js</button></div>
+</section>
+</main>
+
+<script src="places.js"></script>
+<script>
+var HEADER='// Places déjà réservées sur le site du Grand Théâtre du Kraken.\n'+
+'// Une ligne par place : "identifiant de la place": "pseudo",\n'+
+'// Le bouton « Copier ma réservation » du site fournit la ligne toute prête.\n'+
+'// Fichier généré par admin.html : on peut aussi le modifier à la main.\n';
+var KEY='kraken-brouillon';
+var PAIR=/"([^"]+)"\s*:\s*"([^"]*)"/g, IDX=/\b(?:RDC|E\d)-[A-Za-z0-9-]+\.\d+\b/, IDRE=/^(?:RDC|E\d)-[A-Za-z0-9-]+\.\d+$/, PS=/Pseudo\s*:\s*([^\r\n]+)/i;
+var base=(typeof TAKEN==='object'&&TAKEN)?TAKEN:{}, data={};
+function $(i){return document.getElementById(i)}
+function copyOf(o){var r={};for(var k in o)r[k]=o[k];return r}
+function sig(o){return JSON.stringify(Object.keys(o).sort().map(function(k){return [k,o[k]]}))}
+function sorted(o){return Object.keys(o).sort(function(a,b){return a.localeCompare(b,'fr',{numeric:true})})}
+function describe(id){
+  var m=id.match(/^(RDC|E(\d))-(.+)\.(\d+)$/);if(!m)return id;
+  var n=m[4],mid=m[3],f=m[2];
+  if(m[1]==='RDC'){var p=mid.split('-');return 'Rez-de-chaussée, côté '+(p[0]==='G'?'gauche':'droit')+', rang '+p[1]+', siège '+n}
+  if(mid==='Fond-G')return 'Étage '+f+', fond gauche, siège '+n;
+  if(mid==='Fond-D')return 'Étage '+f+', fond droit, siège '+n;
+  var t=mid.match(/^([GF])-m(\d)$/);if(t)return 'Étage '+f+', rang '+f+t[1]+', marche '+t[2]+', siège '+n;
+  return 'Étage '+f+', rang '+f+mid+', siège '+n}
+function parseText(t){var out=[],m;PAIR.lastIndex=0;while((m=PAIR.exec(t)))out.push([m[1],m[2]]);return out}
+function say(t,kind){var m=$('msg');m.textContent=t;m.className='msg'+(kind?' '+kind:'')}
+function build(){var s=HEADER+'var TAKEN = {\n';sorted(data).forEach(function(k){s+='  '+JSON.stringify(k)+': '+JSON.stringify(data[k])+',\n'});return s+'};\n'}
+function saveDraft(){try{if(sig(data)===sig(base))localStorage.removeItem(KEY);else localStorage.setItem(KEY,JSON.stringify(data))}catch(e){}
+  $('draft').classList.toggle('on',sig(data)!==sig(base))}
+function render(){
+  var ids=sorted(data),w=$('listwrap');$('count').textContent=ids.length;w.textContent='';
+  if(!ids.length){var p=document.createElement('p');p.className='empty';p.textContent='Aucune réservation pour l’instant. Ajoutez-en une ci-dessus.';w.appendChild(p)}
+  else{var tb=document.createElement('table'),th=document.createElement('thead'),hr=document.createElement('tr');
+    [['Place',''],['Identifiant','hd'],['Pseudo',''],['','']].forEach(function(c){var h=document.createElement('th');h.textContent=c[0];if(c[1])h.className=c[1];hr.appendChild(h)});
+    th.appendChild(hr);tb.appendChild(th);var bd=document.createElement('tbody');
+    ids.forEach(function(id){var tr=document.createElement('tr'),a=document.createElement('td'),b=document.createElement('td'),c=document.createElement('td'),d=document.createElement('td');
+      a.textContent=describe(id);b.className='id';b.textContent=id;c.className='who';c.textContent=data[id];d.className='act';
+      var rm=document.createElement('button');rm.type='button';rm.className='rm';rm.textContent='Retirer';rm.setAttribute('aria-label','Retirer la réservation de '+data[id]+', '+describe(id));
+      rm.addEventListener('click',function(){delete data[id];saveDraft();render();say('Retiré : '+describe(id)+'.','ok')});
+      d.appendChild(rm);tr.appendChild(a);tr.appendChild(b);tr.appendChild(c);tr.appendChild(d);bd.appendChild(tr)});
+    tb.appendChild(bd);w.appendChild(tb)}
+  $('out').value=build()}
+function load(){data=copyOf(base);var d=null;try{d=JSON.parse(localStorage.getItem(KEY)||'null')}catch(e){}
+  if(d&&typeof d==='object'&&sig(d)!==sig(base))data=d;saveDraft();render()}
+$('resa').addEventListener('input',function(){var t=this.value,it=parseText(t);
+  if(it.length===1)$('pseudo').value=it[0][1];
+  else if(!it.length){var p=t.match(PS);if(p)$('pseudo').value=p[1].trim()}
+  $('hint').textContent=it.length>1?it.length+' réservations détectées : elles seront toutes ajoutées.':''});
+$('form').addEventListener('submit',function(e){e.preventDefault();
+  var t=$('resa').value.trim(),n=$('pseudo').value.trim(),items=parseText(t);
+  if(!items.length){var m=t.match(IDX);if(!m){say('Aucune place reconnue. Collez le texte copié sur le site ou tapez un identifiant comme E2-C.3.','err');return}
+    var ps=t.match(PS);items=[[m[0],n||(ps?ps[1].trim():'')]]}
+  else if(items.length===1&&n)items[0][1]=n;
+  var added=[],i,id,name;
+  for(i=0;i<items.length;i++){id=items[i][0].trim();name=items[i][1].trim();
+    if(!IDRE.test(id)){say('Identifiant de place invalide : « '+id+' ».','err');return}
+    if(!name){say('Indiquez le pseudo pour la place '+id+'.','err');return}}
+  for(i=0;i<items.length;i++){id=items[i][0].trim();name=items[i][1].trim();
+    if(data[id]===name)continue;
+    if(data[id]&&!window.confirm(describe(id)+' est déjà réservée par '+data[id]+'. La donner à '+name+' ?'))continue;
+    data[id]=name;added.push(describe(id)+' → '+name)}
+  if(!added.length){say('Rien à ajouter : ces réservations existent déjà.','err');return}
+  $('resa').value='';$('pseudo').value='';$('hint').textContent='';saveDraft();render();
+  say((added.length>1?added.length+' réservations ajoutées.':'Ajouté : '+added[0]+'.'),'ok');$('resa').focus()});
+$('reset').addEventListener('click',function(){try{localStorage.removeItem(KEY)}catch(e){}data=copyOf(base);saveDraft();render();say('Retour au contenu de places.js.','ok')});
+$('copy').addEventListener('click',function(){var b=this,o=$('out'),txt=o.value;
+  function ok(){b.textContent='Copié !';setTimeout(function(){b.textContent='Copier places.js'},2000)}
+  function fallback(){o.focus();o.select();try{if(document.execCommand('copy'))ok()}catch(e){}}
+  try{navigator.clipboard.writeText(txt).then(ok,fallback)}catch(e){fallback()}});
+$('dl').addEventListener('click',function(){var bl=new Blob([$('out').value],{type:'text/javascript'}),a=document.createElement('a');
+  a.href=URL.createObjectURL(bl);a.download='places.js';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},1000)});
+load();
+</script>
+</body>
+</html>
