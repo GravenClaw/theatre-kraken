@@ -177,8 +177,8 @@ function bseats(fid,nm,label,g,s){bcells(g,s).forEach(function(c,i){
 var x=s<0?CX-(c[0]+1)*P+2:CX+c[0]*P+2;
 seat(fid+'-'+nm+'.'+(i+1),x,c[1]*P+2,label+', siège '+(i+1))})}
 function bline(pts,a){var d='';pts.forEach(function(p,i){d+=(i?'L':'M')+(CX+p[0]*P)+' '+(p[1]*P)+' '});map.appendChild(el('path',a?Object.assign({d:d,fill:'none','aria-hidden':'true'},a):{d:d}))}
-function drawBal(f){var fid='E'+f,Rl='ABCDEFG',Ll='NMLKJIH',top=f>=2?0.2:2.6;
-map.setAttribute('viewBox','0 '+Math.round(top*P)+' 680 '+Math.round((32.4-top)*P));
+function drawBal(f){var fid='E'+f,Rl='ABCDEFG',Ll=f>=2?'PONMLKJ':'NMLKJIH',top=f>=2?0.2:2.6;
+map.setAttribute('viewBox','0 '+Math.round(top*P)+' 680 '+Math.round((34.6-top)*P));
 /* garde-corps (mur de pierre) en escalier autour du vide central */
 var w=[[11,31],[11,14.7],[10,14.7],[10,10.7],[9,10.7],[9,6.7],[7,6.7],[7,4.6]];
 var wl=w.map(function(p){return [-p[0],p[1]]}),wr=w;
@@ -186,22 +186,23 @@ if(f>=2){wl.push([-4,4.6],[-4,3.1]);wr=wr.concat([[4,4.6],[4,3.1]])}else{wl.push
 var st={stroke:'#8d8279','stroke-width':6,'stroke-linejoin':'miter','stroke-opacity':'.55'};
 bline(wl,st);bline(wr,st);
 if(f>=2){bline([[-4,3.1],[4,3.1]],st);
-/* régie : console + 4 blocs verts */
-map.appendChild(el('rect',{x:CX-4*P,y:3.3*P,width:8*P,height:1.9*P,rx:3,fill:'#4b4a4d',stroke:'#8d8279','aria-hidden':'true'}));
-map.appendChild(el('rect',{x:CX-1.5*P,y:3.45*P,width:.8*P,height:.5*P,fill:'#d9b13a','aria-hidden':'true'}));
-map.appendChild(el('rect',{x:CX+2.4*P,y:3.45*P,width:.8*P,height:.5*P,fill:'#d9b13a','aria-hidden':'true'}));
-[[-3.5,-2.1],[-1.7,-.2],[.2,1.7],[2.1,3.5]].forEach(function(r){map.appendChild(el('rect',{x:CX+r[0]*P,y:1*P,width:(r[1]-r[0])*P,height:1.5*P,rx:3,fill:'#2f9e44',stroke:'#7be08f','aria-hidden':'true'}))});
-map.appendChild(el('text',{x:CX,y:2.95*P,'text-anchor':'middle',fill:'#7be08f','aria-hidden':'true',style:'font:15px "Pirata One",serif'},'Régie'))}
+/* régie : un seul bloc */
+map.appendChild(el('rect',{x:CX-3.5*P,y:1*P,width:7*P,height:1.7*P,rx:4,fill:'#2f9e44',stroke:'#7be08f','aria-hidden':'true'}));
+map.appendChild(el('text',{x:CX,y:2.1*P,'text-anchor':'middle',fill:'#08140b','aria-hidden':'true',style:'font:18px "Pirata One",serif'},'Régie'))}
 else{bline([[-4,3.4],[4,3.4]],st)}
 /* rambarde blanche devant le vide, puis la scène */
 bline([[-10.6,26],[-7.4,26],[-7.4,25],[-5,25],[-5,24.4],[5,24.4],[5,25],[7.4,25],[7.4,26],[10.6,26]],{stroke:'#f4e8d0','stroke-width':7,'stroke-linejoin':'miter','stroke-opacity':'.85'});
-map.appendChild(el('rect',{x:CX-9*P,y:27.4*P,width:18*P,height:4.4*P,rx:6,fill:'#5a1a22',stroke:'#d4a24c','aria-hidden':'true'}));
-map.appendChild(el('text',{x:CX,y:30*P,'text-anchor':'middle',fill:'#f4e8d0','aria-hidden':'true',style:'font:22px "Pirata One",serif'},'Scène'));
+map.appendChild(el('path',{d:'M'+(CX-9*P)+' '+31.6*P+' L'+(CX-9*P)+' '+29.6*P+' Q'+CX+' '+25.2*P+' '+(CX+9*P)+' '+29.6*P+' L'+(CX+9*P)+' '+31.6*P+' Z',fill:'#1a0d10',stroke:'#d4a24c','stroke-opacity':'.55','aria-hidden':'true'}));
+map.appendChild(el('text',{x:CX,y:31.05*P,'text-anchor':'middle',fill:'#b9a48a','aria-hidden':'true',style:'font:21px "Pirata One",serif'},'Orchestre'));
+map.appendChild(el('rect',{x:CX-7.8*P,y:32.05*P,width:15.6*P,height:2.1*P,rx:6,fill:'#5a1a22',stroke:'#d4a24c','aria-hidden':'true'}));
+map.appendChild(el('text',{x:CX,y:33.55*P,'text-anchor':'middle',fill:'#f4e8d0','aria-hidden':'true',style:'font:22px "Pirata One",serif'},'Scène'));
 /* sièges */
 BG.forEach(function(g,i){if(f>=3&&i===0)return;var a=Rl[i],b=Ll[i],y=g.v*P+15,xo=(g.t==='V'?g.u+1:g.u+2)*P+7;
 bseats(fid,a,'Étage '+f+', rang '+f+a,g,1);lab(CX+xo,y,f+a,'start');
 bseats(fid,b,'Étage '+f+', rang '+f+b,g,-1);lab(CX-xo,y,f+b,'end')});
-if(f>=2){bseats(fid,'Fond-G','Étage '+f+', fond gauche',BFOND,-1);bseats(fid,'Fond-D','Étage '+f+', fond droit',BFOND,1)}}
+if(f>=2){var yf=BFOND.v*P+15,xf=(BFOND.u+2)*P+7;
+bseats(fid,'I','Étage '+f+', rang '+f+'I',BFOND,-1);lab(CX-xf,yf,f+'I','end');
+bseats(fid,'H','Étage '+f+', rang '+f+'H',BFOND,1);lab(CX+xf,yf,f+'H','start')}}
 function draw5(){var fid='E5';
 [['B',[3]],['C',[3]],['D',[3,2]],['E',[2,1,1]]].forEach(function(r,i){var y=360-i*26,xr=280+hw(y);
 rowAt(fid,r[0],'Étage 5, rang 5'+r[0],y,r[1],xr-wd(r[1]));lab(xr+16,y+14,'5'+r[0],'start')});
