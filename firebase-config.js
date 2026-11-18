@@ -9,13 +9,7 @@
 //   projectId: "mon-projet",
 //   appId: "..."
 // };
-window.FIREBASE_CONFIG = { import { initializeApp } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/13.4.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+window.FIREBASE_CONFIG =
   const firebaseConfig = {
     apiKey: "AIzaSyDtsuPvaQlKz928iGGVp-lES_QJuQWU_JM",
     authDomain: "kraken-bf767.firebaseapp.com",
@@ -26,7 +20,3 @@ window.FIREBASE_CONFIG = { import { initializeApp } from "https://www.gstatic.co
     appId: "1:454259927411:web:578c068b663bc623cc7d06",
     measurementId: "G-6HYY6WJCXJ"
   };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);};
