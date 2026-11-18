@@ -1,0 +1,11 @@
+{
+  "rules": {
+    "reservations": {
+      ".read": true,
+      "$k": {
+        ".write": "(!data.exists() && newData.exists()) || (auth != null && auth.token.email === 'VOTRE_EMAIL@exemple.com')",
+        ".validate": "$k.matches(/^[A-Za-z0-9_-]+$/) && newData.hasChildren(['seat','name','ts']) && newData.child('seat').isString() && newData.child('name').isString() && newData.child('name').val().length <= 16"
+      }
+    }
+  }
+}
