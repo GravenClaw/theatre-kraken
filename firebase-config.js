@@ -1,5 +1,5 @@
 const firebaseConfig = {
-  apiKey: "AIzaSyDtsuPvaQlKz928iGGVp-lES_QJuQWU_JM",
+  apiKey: "TON_API_KEY",
   authDomain: "kraken-bf767.firebaseapp.com",
   databaseURL: "https://kraken-bf767-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "kraken-bf767",
