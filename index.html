@@ -410,6 +410,7 @@ draw();updateCount()};
 document.getElementById('form').addEventListener('submit',async function(e){e.preventDefault();if(!selId)return;
 var name=document.getElementById('pseudo').value.trim();if(!name)return;
 var msg=document.getElementById('msg'),go=document.getElementById('go'),id=selId,label=selLabel;msg.textContent='';
+var low=name.toLowerCase();for(var k in TK){if(String(TK[k]).trim().toLowerCase()===low){msg.textContent='Ce pseudo a déjà une place réservée : une seule réservation par pseudo.';return}}
 if(window.reserveSeat){window.pend=id;go.disabled=true;var r=await window.reserveSeat(id,name);window.pend=null;
 if(!r.ok){msg.textContent='Cette place est déjà prise ou la réservation a échoué. Choisissez-en une autre.';go.disabled=!selId;return}
 selId=null;selLabel='';document.getElementById('seatout').value='Aucune';draw();
