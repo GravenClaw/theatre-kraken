@@ -1,40 +1,107 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Administration – Théâtre du Kraken</title>
-<link rel="icon" type="image/png" href="favicon-admin.png">
-<style>body{margin:0;padding:1.2rem;background:#140a0c;color:#f4e8d0;font:18px/1.5 Georgia,serif}main{max-width:720px;margin:0 auto}h1{color:#d4a24c;font-weight:400}
-input,button{font:inherit;padding:.5rem .7rem;border-radius:6px;border:1px solid #6a4a4e;background:#0e0708;color:#f4e8d0}button{background:#8a1624;border-color:#d4a24c;cursor:pointer}
-form{display:grid;gap:.6rem;max-width:360px}table{width:100%;border-collapse:collapse;margin-top:1rem}td,th{border-bottom:1px solid #4a2a2e;padding:.4rem;text-align:left}.err{color:#ff8a80}</style></head>
+<style>
+:root{--bg:#140a0c;--panel:#1d1013;--field:#0e0708;--line:#4a2a2e;--line2:#6a4a4e;--text:#f4e8d0;--muted:#b9a88a;--gold:#d4a24c;--red:#8a1624;--red2:#a81d30;--ok:#9ad49a;--bad:#ff8a80}
+*{box-sizing:border-box}
+body{margin:0;padding:1.2rem;background:var(--bg);color:var(--text);font:18px/1.5 Georgia,serif}
+main{max-width:760px;margin:0 auto}
+h1{color:var(--gold);font-weight:400;font-size:1.6rem;margin:0}
+input,button{font:inherit;padding:.55rem .8rem;border-radius:6px;border:1px solid var(--line2);background:var(--field);color:var(--text)}
+button{background:var(--red);border-color:var(--gold);cursor:pointer}
+button:hover{background:var(--red2)}
+button.ghost{background:transparent;border-color:var(--line2);color:var(--muted)}
+button.ghost:hover{border-color:var(--gold);color:var(--text)}
+button.confirm{background:var(--gold);color:#140a0c;border-color:var(--gold);font-weight:700}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:.6rem 1rem;padding-bottom:1rem;border-bottom:1px solid var(--line);margin-bottom:1.2rem}
+.sub{margin:.15rem 0 0;color:var(--muted);font-size:.9rem}
+.userbar{display:flex;align-items:center;gap:.7rem;font-size:.9rem;color:var(--muted)}
+.userbar button{padding:.35rem .7rem;font-size:.9rem}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:1.2rem}
+#lf{display:grid;gap:.9rem;max-width:380px;margin:1.5rem auto}
+#lf h2{margin:0;font-size:1.1rem;font-weight:400;color:var(--gold)}
+label{display:grid;gap:.25rem;font-size:.9rem;color:var(--muted)}
+.msg{min-height:1.5em;margin:.8rem 0 0;font-size:.95rem}
+.msg.err{color:var(--bad)}.msg.ok{color:var(--ok)}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem 1.2rem;margin-bottom:1rem}
+.count{display:flex;align-items:baseline;gap:.5rem}
+.count b{font-size:2rem;color:var(--gold);font-weight:400;line-height:1}
+.toolbar input{flex:1 1 200px;min-width:0}
+.hint{margin:0 0 .8rem;color:var(--muted);font-size:.9rem}
+.list{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.list li{display:grid;grid-template-columns:7rem 1fr auto;align-items:center;gap:.8rem;padding:.55rem .2rem;border-bottom:1px solid var(--line)}
+.seat{color:var(--gold);font-weight:700}
+.name{overflow-wrap:anywhere}
+.empty{padding:1.4rem .2rem;color:var(--muted);text-align:center}
+.list li button{padding:.35rem .8rem;font-size:.9rem;min-width:6.5rem}
+@media (max-width:520px){body{padding:.8rem;font-size:17px}.list li{grid-template-columns:1fr auto}.seat{grid-column:1}.name{grid-column:1;color:var(--muted);font-size:.9rem}.list li button{grid-column:2;grid-row:1 / span 2}}
+@media (prefers-reduced-motion:no-preference){button{transition:background .15s,border-color .15s}}
+</style></head>
 <body><main>
-<h1>Administration des réservations</h1>
-<form id="lf"><input id="em" type="email" placeholder="E-mail" autocomplete="username" required><input id="pw" type="password" placeholder="Mot de passe" autocomplete="current-password" required><button type="submit">Se connecter</button></form>
-<p id="err" class="err" role="alert"></p>
-<div id="adm" hidden><p><span id="who"></span> <button id="out" type="button">Se déconnecter</button></p>
-<p><b id="cnt">0</b> réservation(s). « Libérer » remet la place à disposition de tout le monde.</p>
-<table><thead><tr><th>Place</th><th>Pseudo</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+<header>
+<div><h1>Administration des réservations</h1><p class="sub">Théâtre du Kraken</p></div>
+<div class="userbar" id="userbar" hidden><span id="who"></span><button id="out" type="button" class="ghost">Se déconnecter</button></div>
+</header>
+
+<form id="lf" class="card">
+<h2>Connexion</h2>
+<label>E-mail<input id="em" type="email" autocomplete="username" required></label>
+<label>Mot de passe<input id="pw" type="password" autocomplete="current-password" required></label>
+<button type="submit">Se connecter</button>
+</form>
+
+<section id="adm" hidden>
+<div class="toolbar">
+<div class="count"><b id="cnt">0</b><span id="cntl">réservation</span></div>
+<input id="q" type="search" placeholder="Rechercher une place ou un pseudo" aria-label="Rechercher une place ou un pseudo" autocomplete="off">
+</div>
+<p class="hint">« Libérer » remet la place à disposition de tout le monde. Un second clic est demandé pour confirmer.</p>
+<ul class="list" id="rows"></ul>
+</section>
+
+<p id="err" class="msg err" role="alert"></p>
+<p id="ok" class="msg ok" role="status"></p>
 </main>
 <script src="firebase-config.js"></script>
 <script type="module">
 var C=window.FIREBASE_CONFIG,err=document.getElementById('err'),$=function(i){return document.getElementById(i)};
-if(!C||!C.databaseURL){err.textContent='Firebase n’est pas configuré : voir firebase-config.js.'}
+function fail(t){$('ok').textContent='';err.textContent=t}
+function good(t){err.textContent='';$('ok').textContent=t}
+if(!C||!C.databaseURL){fail('Firebase n’est pas configuré : voir firebase-config.js.')}
 else{try{
 const V='10.12.2',B='https://www.gstatic.com/firebasejs/'+V+'/';
 const {initializeApp}=await import(B+'firebase-app.js');
 const {getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}=await import(B+'firebase-auth.js');
 const {getDatabase,ref,onValue,remove}=await import(B+'firebase-database.js');
 const app=initializeApp(C),auth=getAuth(app),db=getDatabase(app);
-$('lf').addEventListener('submit',async function(e){e.preventDefault();err.textContent='';
-try{await signInWithEmailAndPassword(auth,$('em').value,$('pw').value)}catch(x){err.textContent='Connexion impossible : vérifiez l’e-mail et le mot de passe.'}});
+var all=[],armed=null,armTimer=null;
+$('lf').addEventListener('submit',async function(e){e.preventDefault();err.textContent='';$('ok').textContent='';
+try{await signInWithEmailAndPassword(auth,$('em').value,$('pw').value)}catch(x){fail('Connexion impossible : vérifiez l’e-mail et le mot de passe.')}});
 $('out').addEventListener('click',function(){signOut(auth)});
+$('q').addEventListener('input',draw);
+function disarm(){armed=null;clearTimeout(armTimer)}
+function draw(){
+var f=$('q').value.trim().toLowerCase(),tb=$('rows');tb.innerHTML='';
+$('cnt').textContent=all.length;$('cntl').textContent=all.length>1?'réservations':'réservation';
+var list=all.filter(function(r){return !f||r.seat.toLowerCase().indexOf(f)>-1||r.name.toLowerCase().indexOf(f)>-1});
+if(!list.length){var li=document.createElement('li');li.className='empty';li.textContent=all.length?'Aucun résultat pour cette recherche.':'Aucune réservation pour le moment.';tb.appendChild(li);return}
+list.forEach(function(r){
+var li=document.createElement('li'),a=document.createElement('span'),b=document.createElement('span'),bt=document.createElement('button');
+a.className='seat';a.textContent=r.seat;b.className='name';b.textContent=r.name||'(sans pseudo)';
+bt.type='button';
+var isArmed=armed===r.k;bt.textContent=isArmed?'Confirmer ?':'Libérer';if(isArmed)bt.className='confirm';
+bt.addEventListener('click',function(){
+if(armed!==r.k){disarm();armed=r.k;armTimer=setTimeout(function(){disarm();draw()},4000);draw();return}
+disarm();bt.disabled=true;
+remove(ref(db,'reservations/'+r.k)).then(function(){good('Place '+r.seat+' libérée.')}).catch(function(){bt.disabled=false;draw();fail('Suppression refusée : ce compte n’est pas autorisé dans les règles.')})});
+li.appendChild(a);li.appendChild(b);li.appendChild(bt);tb.appendChild(li)})}
+function render(snap){all=[];snap.forEach(function(c){var v=c.val()||{};all.push({k:c.key,seat:String(v.seat||c.key),name:String(v.name||'')})});
+all.sort(function(a,b){return a.seat.localeCompare(b.seat,'fr',{numeric:true})});draw()}
 var unsub=null;
-function render(snap){var list=[];snap.forEach(function(c){var v=c.val()||{};list.push({k:c.key,seat:v.seat||c.key,name:v.name||''})});
-list.sort(function(a,b){return a.seat<b.seat?-1:1});$('cnt').textContent=list.length;var tb=$('rows');tb.innerHTML='';
-list.forEach(function(r){var tr=document.createElement('tr'),a=document.createElement('td'),b=document.createElement('td'),c=document.createElement('td'),bt=document.createElement('button');
-a.textContent=r.seat;b.textContent=r.name;bt.type='button';bt.textContent='Libérer';
-bt.addEventListener('click',function(){remove(ref(db,'reservations/'+r.k)).catch(function(){err.textContent='Suppression refusée : ce compte n’est pas autorisé dans les règles.'})});
-c.appendChild(bt);tr.appendChild(a);tr.appendChild(b);tr.appendChild(c);tb.appendChild(tr)})}
-onAuthStateChanged(auth,function(u){$('lf').hidden=!!u;$('adm').hidden=!u;
-if(u){$('who').textContent=u.email;unsub=onValue(ref(db,'reservations'),render,function(){err.textContent='Lecture impossible.'})}
-else if(unsub){unsub();unsub=null}})
-}catch(e){err.textContent='Impossible de charger Firebase.'}}
+onAuthStateChanged(auth,function(u){$('lf').hidden=!!u;$('adm').hidden=!u;$('userbar').hidden=!u;
+err.textContent='';$('ok').textContent='';
+if(u){$('who').textContent=u.email;unsub=onValue(ref(db,'reservations'),render,function(){fail('Lecture impossible.')})}
+else{if(unsub){unsub();unsub=null}all=[];disarm();$('q').value=''}})
+}catch(e){fail('Impossible de charger Firebase.')}}
 </script></body></html>
