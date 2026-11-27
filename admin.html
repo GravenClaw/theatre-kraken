@@ -24,8 +24,8 @@ header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-betw
 #lf{display:grid;gap:.9rem;max-width:380px;margin:1.5rem auto}
 #lf h2{margin:0;font-size:1.1rem;font-weight:400;color:var(--gold)}
 label{display:grid;gap:.25rem;font-size:.9rem;color:var(--muted)}
-.msg{min-height:1.5em;margin:.8rem 0 0;font-size:.95rem}
-.msg.err{color:var(--bad)}.msg.ok{color:var(--ok)}
+.msg{margin:0 0 1rem;padding:.6rem .8rem;border-radius:6px;font-size:.95rem}.msg:empty{display:none}
+.msg.err{color:var(--bad);border:1px solid var(--bad)}.msg.ok{color:var(--ok);border:1px solid var(--ok)}
 .toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:.8rem 1.2rem;margin-bottom:1rem}
 .count{display:flex;align-items:baseline;gap:.5rem}
 .count b{font-size:2rem;color:var(--gold);font-weight:400;line-height:1}
@@ -47,6 +47,8 @@ label{display:grid;gap:.25rem;font-size:.9rem;color:var(--muted)}
 <div><h1>Administration des réservations</h1><p class="sub">Théâtre du Kraken</p></div>
 <div class="userbar" id="userbar" hidden><span id="who"></span><button id="out" type="button" class="ghost">Se déconnecter</button></div>
 </header>
+<p id="err" class="msg err" role="alert"></p>
+<p id="ok" class="msg ok" role="status"></p>
 
 <form id="lf" class="card">
 <h2>Connexion</h2>
@@ -64,8 +66,6 @@ label{display:grid;gap:.25rem;font-size:.9rem;color:var(--muted)}
 <ul class="list" id="rows"></ul>
 </section>
 
-<p id="err" class="msg err" role="alert"></p>
-<p id="ok" class="msg ok" role="status"></p>
 </main>
 <script src="firebase-config.js"></script>
 <script type="module">
@@ -79,9 +79,10 @@ const {initializeApp}=await import(B+'firebase-app.js');
 const {getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged}=await import(B+'firebase-auth.js');
 const {getDatabase,ref,onValue,remove,update}=await import(B+'firebase-database.js');
 const app=initializeApp(C),auth=getAuth(app),db=getDatabase(app);
-var all=[],armed=null,armTimer=null,editing=null,needFocus=false;
+var all=[],armed=null,armTimer=null,editing=null,needFocus=false,loaded=false,loadTimer=null;
+function loading(){var tb=$('rows'),li=document.createElement('li');tb.innerHTML='';li.className='empty';li.textContent='Chargement des réservations…';tb.appendChild(li)}
 $('lf').addEventListener('submit',async function(e){e.preventDefault();err.textContent='';$('ok').textContent='';
-try{await signInWithEmailAndPassword(auth,$('em').value,$('pw').value)}catch(x){fail('Connexion impossible : vérifiez l’e-mail et le mot de passe.')}});
+try{await signInWithEmailAndPassword(auth,$('em').value,$('pw').value)}catch(x){fail('Connexion impossible'+(x&&x.code?' ('+x.code+')':'')+' : vérifiez l’e-mail et le mot de passe.')}});
 $('out').addEventListener('click',function(){signOut(auth)});
 $('q').addEventListener('input',draw);
 function disarm(){armed=null;clearTimeout(armTimer)}
@@ -105,3 +106,27 @@ if(editing&&editing.k===r.k){
 var inp=document.createElement('input');inp.type='text';inp.maxLength=40;inp.value=editing.val;inp.setAttribute('aria-label','Nouveau pseudo pour la place '+r.seat);
 inp.addEventListener('input',function(){editing.val=inp.value});
 inp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();save(r)}else if(e.key==='Escape'){editing=null;draw()}});
+focusEl=inp;li.appendChild(inp);
+act.appendChild(btn('Enregistrer','',function(){save(r)}));
+act.appendChild(btn('Annuler','ghost',function(){editing=null;draw()}));
+}else{
+var b=document.createElement('span');b.className='name';b.textContent=r.name||'(sans pseudo)';li.appendChild(b);
+act.appendChild(btn('Modifier','ghost',function(){disarm();editing={k:r.k,val:r.name};needFocus=true;draw()}));
+var isArmed=armed===r.k;
+act.appendChild(btn(isArmed?'Confirmer ?':'Libérer',isArmed?'confirm':'',function(e){
+if(armed!==r.k){disarm();editing=null;armed=r.k;armTimer=setTimeout(function(){disarm();draw()},4000);draw();return}
+disarm();e.currentTarget.disabled=true;
+remove(ref(db,'reservations/'+r.k)).then(function(){good('Place '+r.seat+' libérée.')}).catch(function(){draw();fail('Suppression refusée : ce compte n’est pas autorisé dans les règles.')})}))}
+li.appendChild(act);tb.appendChild(li)});
+if(focusEl&&needFocus){focusEl.focus();focusEl.select();needFocus=false}}
+function render(snap){loaded=true;clearTimeout(loadTimer);err.textContent='';all=[];snap.forEach(function(c){var v=c.val()||{};all.push({k:c.key,seat:String(v.seat||c.key),name:String(v.name||'')})});
+all.sort(function(a,b){return a.seat.localeCompare(b.seat,'fr',{numeric:true})});draw()}
+var unsub=null;
+onAuthStateChanged(auth,function(u){$('lf').hidden=!!u;$('adm').hidden=!u;$('userbar').hidden=!u;
+err.textContent='';$('ok').textContent='';
+if(u){$('who').textContent=u.email;loaded=false;loading();
+loadTimer=setTimeout(function(){if(!loaded){$('rows').innerHTML='';fail('La base ne répond pas après 8 secondes. Vérifiez databaseURL dans firebase-config.js et que la Realtime Database existe.')}},8000);
+unsub=onValue(ref(db,'reservations'),render,function(e){clearTimeout(loadTimer);$('rows').innerHTML='';fail('Lecture impossible'+(e&&e.code?' ('+e.code+')':'')+' : vérifiez les règles de la base pour ce compte.')})}
+else{if(unsub){unsub();unsub=null}clearTimeout(loadTimer);all=[];disarm();editing=null;$('q').value=''}})
+}catch(e){fail('Impossible de charger Firebase.')}}
+</script></body></html>
